@@ -1,0 +1,20 @@
+# Ignore bin and obj directories
+bin/
+obj/
+
+# Ignore other common directories and files
+*.log
+*.tmp
+*.swp
+
+# Ignore Visual Studio specific files
+.vscode/
+.vs/
+*.user
+*.suo
+*.csproj.user
+*.sln.docstates
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
