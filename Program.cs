@@ -3,6 +3,16 @@ using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 var services = builder.Services;
 
@@ -11,10 +21,14 @@ services.AddControllers();
 services.AddSingleton<SheetMetadataService>();
 services.AddSingleton<ExcelService>();
 
-// Add configuration to access MongoDB
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var app = builder.Build();
+
+// Enable CORS
+app.UseCors("AllowAllOrigins");
+
+// Add configuration to access MongoDB
 
 if (app.Environment.IsDevelopment())
 {

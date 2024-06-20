@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using backend.Models;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +10,12 @@ namespace backend.Controllers
     {
         private readonly SheetMetadataService _sheetMetadataService = sheetMetadataService;
         private readonly ExcelService _excelService = excelService;
+
+        [HttpGet("Hello")]
+        public IActionResult GetHelloMessage()
+        {
+            return Ok("Hello, world!");
+        }
 
         [HttpGet("{id}", Name = "GetSheetMetadata")]
         public async Task<IActionResult> GetSheetMetadata(string id)
