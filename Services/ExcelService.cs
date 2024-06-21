@@ -32,5 +32,49 @@ namespace backend.Services
 
             return result;
         }
+
+        public async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadDataExcelAsync(Stream fileStream)
+        {
+            using var package = new ExcelPackage(fileStream);
+            var worksheet = package.Workbook.Worksheets[0];
+
+            var countries = new List<string>();
+            var years = new List<string>();
+            var datasets = new List<Dictionary<string, object>>();
+
+            // Extract years from the first row starting from the third column
+            for (int col = 3; col <= worksheet.Dimension.End.Column; col++)
+            {
+                years.Add(worksheet.Cells[1, col].Text);
+            }
+
+            // Extract countries and data from subsequent rows
+            for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+            {
+                var country = worksheet.Cells[row, 2].Text;
+                countries.Add(country);
+
+                var data = new List<int>();
+                for (int col = 3; col <= worksheet.Dimension.End.Column; col++)
+                {
+                    if (int.TryParse(worksheet.Cells[row, col].Text, out int value))
+                    {
+                        data.Add(value);
+                    }
+                    else
+                    {
+                        data.Add(0); // or handle as needed
+                    }
+                }
+
+                datasets.Add(new Dictionary<string, object>
+                {
+                    { "label", country },
+                    { "data", data }
+                });
+            }
+
+            return (countries, years, datasets);
+        }
     }
 }

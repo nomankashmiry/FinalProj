@@ -89,5 +89,37 @@ namespace backend.Controllers
                 return BadRequest($"Error reading Excel file: {ex.Message}");
             }
         }
+
+        [HttpPost("ReadDataByCountries/{id:length(24)}")]
+        public async Task<IActionResult> ReadDataByCountries(string id)
+        {
+            var metadata = await _sheetMetadataService.GetAsync(id);
+
+            if (metadata == null)
+            {
+                return NotFound();
+            }
+
+            var fileStream = await _sheetMetadataService.GetFileAsync(metadata.FileId);
+
+            // Use ExcelService to read data from the Excel file
+            try
+            {
+                var (countries, years, datasets) = await _excelService.ReadDataExcelAsync(fileStream);
+
+                var result = new
+                {
+                    Countries = string.Join(",", countries),
+                    Years = string.Join(",", years),
+                    Datasets = datasets
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error reading Excel file: {ex.Message}");
+            }
+        }
     }
 }
