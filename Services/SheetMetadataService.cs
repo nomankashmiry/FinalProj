@@ -11,32 +11,32 @@ namespace backend.Services
 {
     public class SheetMetadataService
     {
-        private readonly IMongoCollection<SheetMetadata> _sheetMetadata;
+        private readonly IMongoCollection<SheetMetadataModel> _SheetMetadataModel;
         private readonly GridFSBucket _gridFSBucket;    
         public SheetMetadataService(IConfiguration config)
         {
             var client = new MongoClient(config.GetConnectionString("MongoDb"));
             var database = client.GetDatabase(config.GetConnectionString("DatabaseName"));
-            _sheetMetadata = database.GetCollection<SheetMetadata>("Sheet_Metadata");
+            _SheetMetadataModel = database.GetCollection<SheetMetadataModel>("Sheet_Metadata");
             _gridFSBucket = new GridFSBucket(database);
         }
 
-        public async Task<List<SheetMetadata>> GetAsync() =>
-            await _sheetMetadata.Find(item => true).ToListAsync();
+        public async Task<List<SheetMetadataModel>> GetAsync() =>
+            await _SheetMetadataModel.Find(item => true).ToListAsync();
 
-        public async Task<SheetMetadata> GetAsync(string id) =>
-            await _sheetMetadata.Find(item => item.Id == id).FirstOrDefaultAsync();
+        public async Task<SheetMetadataModel> GetAsync(string id) =>
+            await _SheetMetadataModel.Find(item => item.Id == id).FirstOrDefaultAsync();
 
-        public async Task CreateAsync(SheetMetadata item) =>
-            await _sheetMetadata.InsertOneAsync(item);
+        public async Task CreateAsync(SheetMetadataModel item) =>
+            await _SheetMetadataModel.InsertOneAsync(item);
 
-        public async Task UpdateAsync(string id, SheetMetadata itemIn) =>
-            await _sheetMetadata.ReplaceOneAsync(item => item.Id == id, itemIn);
+        public async Task UpdateAsync(string id, SheetMetadataModel itemIn) =>
+            await _SheetMetadataModel.ReplaceOneAsync(item => item.Id == id, itemIn);
 
         public async Task RemoveAsync(string id) =>
-            await _sheetMetadata.DeleteOneAsync(item => item.Id == id);
+            await _SheetMetadataModel.DeleteOneAsync(item => item.Id == id);
 
-        public async Task<SheetMetadata> CreateFileAsync(SheetMetadata metadata, IFormFile file)
+        public async Task<SheetMetadataModel> CreateFileAsync(SheetMetadataModel metadata, IFormFile file)
         {
             // Store the file in GridFS
             using (var stream = file.OpenReadStream())
@@ -47,7 +47,7 @@ namespace backend.Services
                 metadata.FileId = fileId.ToString();
                 metadata.UploadDate = DateTime.UtcNow;
 
-                await _sheetMetadata.InsertOneAsync(metadata);
+                await _SheetMetadataModel.InsertOneAsync(metadata);
             }
 
             return metadata;

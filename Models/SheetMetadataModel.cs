@@ -7,7 +7,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace backend.Models
 {
-    public class SheetMetadata
+    public class SheetMetadataModel
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]

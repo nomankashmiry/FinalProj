@@ -38,7 +38,7 @@ namespace backend.Controllers
                 return BadRequest("No file uploaded");
             }
 
-            var metadata = new SheetMetadata
+            var metadata = new SheetMetadataModel
             {
                 FileName = file.FileName,
                 ContentType = file.ContentType,

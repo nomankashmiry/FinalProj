@@ -54,10 +54,14 @@ namespace backend.Services
                 var country = worksheet.Cells[row, 2].Text;
                 countries.Add(country);
 
-                var data = new List<int>();
+                if (country.ToLower() == "belgium"){
+                    int x = 1;
+                }
+
+                var data = new List<double>();
                 for (int col = 3; col <= worksheet.Dimension.End.Column; col++)
                 {
-                    if (int.TryParse(worksheet.Cells[row, col].Text, out int value))
+                    if (double.TryParse(worksheet.Cells[row, col].Text, out double value))
                     {
                         data.Add(value);
                     }
