@@ -15,11 +15,11 @@ namespace backend.Services
             List<string> years = new List<string>();
             List<Dictionary<string, object>> datasets = new List<Dictionary<string, object>>();
 
-            if (TypeID == "1")
+            if (TypeID.ToLower() == "capacity")
             {
                 (countries, years, datasets) = await ReadCapacityData(fileStream);
             }
-            else if (TypeID == "2")
+            else if (TypeID.ToLower() == "segment")
             {
                 (countries, years, datasets) = await ReadSegmentedData(fileStream);
             }

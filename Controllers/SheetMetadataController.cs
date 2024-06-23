@@ -88,7 +88,7 @@ namespace backend.Controllers
             // Use ExcelService to read data from the Excel file
             try
             {
-                var (countries, years, datasets) = await _excelService.ReadTypedExcel(fileStream,metadata.ContentType);
+                var (countries, years, datasets) = await _excelService.ReadTypedExcel(fileStream,metadata.TypeID);
 
                 var result = new
                 {
