@@ -14,8 +14,8 @@ namespace backend.Controllers
     {
         private readonly DocumentDeepSearchService _DocumentDSService = DocumentDSService;
 
-        [HttpGet("GetAllDocument")]
-        public async Task<IActionResult> GetAllDocument()
+        [HttpGet("GetAllDocuments")]
+        public async Task<IActionResult> GetAllDocuments()
         {
             var DocumentDSList = await _DocumentDSService.GetAllAsync();
 
