@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using backend.Models;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,8 +14,8 @@ namespace backend.Controllers
     {
         private readonly DocumentDeepSearchService _DocumentDSService = DocumentDSService;
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll(string id)
+        [HttpGet("GetAllDocument")]
+        public async Task<IActionResult> GetAllDocument()
         {
             var DocumentDSList = await _DocumentDSService.GetAllAsync();
 
@@ -24,6 +25,27 @@ namespace backend.Controllers
             }
 
             return Ok(DocumentDSList);
+        }
+
+        [HttpGet("{id}", Name = "GetDocumentData")]
+        public async Task<IActionResult> GetDocumentData(string id)
+        {
+            var DocumentDSList = await _DocumentDSService.GetAllAsync();
+
+            if (DocumentDSList == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(DocumentDSList);
+        }
+
+        [HttpPost("CreateDocumentData")]
+        public async Task<IActionResult> CreateDocumentData([FromBody] DocumentDSModel DocumentData)
+        {
+             await _DocumentDSService.CreateAsync(DocumentData);
+
+            return CreatedAtRoute("GetDocumentData", new { id = DocumentData.Id.ToString() }, DocumentData);
         }
     }
 }

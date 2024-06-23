@@ -18,5 +18,6 @@ namespace backend.Models
         public long Size { get; set; }
         public DateTime UploadDate { get; set; }
         public string FileId { get; set; } // ID of the file in GridFS
+        public string TypeID {get; set;}
     }
 }

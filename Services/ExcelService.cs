@@ -3,37 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 
 namespace backend.Services
 {
     public class ExcelService
     {
-        public async Task<List<string>> ReadExcelAsync(Stream fileStream)
+        public async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadTypedExcel(Stream fileStream, string TypeID)
         {
-            var result = new List<string>();
+            List<string> countries = new List<string>();
+            List<string> years = new List<string>();
+            List<Dictionary<string, object>> datasets = new List<Dictionary<string, object>>();
 
-            using (var package = new ExcelPackage(fileStream))
+            if (TypeID == "1")
             {
-                // Assuming there's only one worksheet in the Excel file
-                var worksheet = package.Workbook.Worksheets[0];
-
-                // Loop through rows and read data
-                for (int row = 1; row <= worksheet.Dimension.Rows; row++)
-                {
-                    // Assuming data is in the first column (A)
-                    var cellValue = worksheet.Cells[row, 1].Value?.ToString();
-                    
-                    if (!string.IsNullOrEmpty(cellValue))
-                    {
-                        result.Add(cellValue);
-                    }
-                }
+                (countries, years, datasets) = await ReadCapacityData(fileStream);
+            }
+            else if (TypeID == "2")
+            {
+                (countries, years, datasets) = await ReadSegmentedData(fileStream);
             }
 
-            return result;
+            return (countries, years, datasets);
         }
 
-        public async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadDataExcelAsync(Stream fileStream)
+        public async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadCapacityData(Stream fileStream)
         {
             using var package = new ExcelPackage(fileStream);
             var worksheet = package.Workbook.Worksheets[0];
@@ -54,10 +48,6 @@ namespace backend.Services
                 var country = worksheet.Cells[row, 2].Text;
                 countries.Add(country);
 
-                if (country.ToLower() == "belgium"){
-                    int x = 1;
-                }
-
                 var data = new List<double>();
                 for (int col = 3; col <= worksheet.Dimension.End.Column; col++)
                 {
@@ -76,6 +66,78 @@ namespace backend.Services
                     { "label", country },
                     { "data", data }
                 });
+            }
+
+            return (countries, years, datasets);
+        }
+
+         private async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadSegmentedData(Stream fileStream)
+        {
+            var countries = new List<string>();
+            var years = new List<string>();
+            var datasets = new List<Dictionary<string, object>>();
+
+            using var package = new ExcelPackage(fileStream);
+            
+                var worksheet = package.Workbook.Worksheets[0]; // Assuming data is in the first sheet
+                var rows = worksheet.Dimension?.Rows ?? 0;
+                var cols = worksheet.Dimension?.Columns ?? 0;
+
+                if (rows == 0 || cols == 0)
+                {
+                    return (countries, years, datasets);
+                }
+
+                for (int row = 2; row <= rows; row++)
+                {
+                    var country = worksheet.Cells[row, 1].Text;
+                    if (!countries.Contains(country))
+                    {
+                        countries.Add(country);
+                    }
+
+                    for (int col = 2; col <= cols; col += 3)
+                    {
+                        if (worksheet.Cells[1, col].Text.Contains("Y"))
+                        {
+                            var headerText =  worksheet.Cells[1, col].Text;
+                            var year = headerText.Contains("Rooftop") ? headerText.Split(' ')[1]: headerText.Split(' ')[2];
+                            if (!years.Contains(year))
+                            {
+                                years.Add(year);
+                            }
+
+                            var rooftop = worksheet.Cells[row, col]?.Text ?? "0";
+                            var utilityScale = worksheet.Cells[row, col + 1]?.Text ?? "0";
+
+                            var rooftopData = datasets.FirstOrDefault(d => d["country"].ToString() == country && d["label"].ToString() == "Rooftop");
+                            var utilityScaleData = datasets.FirstOrDefault(d => d["country"].ToString() == country && d["label"].ToString() == "Utility Scale");
+
+                            if (rooftopData == null)
+                            {
+                                rooftopData = new Dictionary<string, object>
+                                {
+                                    { "country", country },
+                                    { "label", "Rooftop" },
+                                    { "data", new List<string>() }
+                                };
+                                datasets.Add(rooftopData);
+                            }
+                            ((List<string>)rooftopData["data"]).Add(rooftop);
+
+                            if (utilityScaleData == null)
+                            {
+                                utilityScaleData = new Dictionary<string, object>
+                                {
+                                    { "country", country },
+                                    { "label", "Utility Scale" },
+                                    { "data", new List<string>() }
+                                };
+                                datasets.Add(utilityScaleData);
+                            }
+                            ((List<string>)utilityScaleData["data"]).Add(utilityScale);
+                        }
+                    }
             }
 
             return (countries, years, datasets);

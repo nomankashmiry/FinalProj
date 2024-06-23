@@ -11,12 +11,6 @@ namespace backend.Controllers
         private readonly SheetMetadataService _sheetMetadataService = sheetMetadataService;
         private readonly ExcelService _excelService = excelService;
 
-        [HttpGet("Hello")]
-        public IActionResult GetHelloMessage()
-        {
-            return Ok("Hello, world!");
-        }
-
         [HttpGet("{id}", Name = "GetSheetMetadata")]
         public async Task<IActionResult> GetSheetMetadata(string id)
         {
@@ -30,8 +24,21 @@ namespace backend.Controllers
             return Ok(item);
         }
 
+        [HttpGet("GetAllSheetMetadata")]
+        public async Task<IActionResult> GetAllSheetMetadata()
+        {
+            var item = await _sheetMetadataService.GetAsync();
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(item);
+        }
+
         [HttpPost("UploadExcel")]
-        public async Task<IActionResult> UploadExcel(IFormFile file)
+        public async Task<IActionResult> UploadExcel(IFormFile file,[FromForm] string typeId)
         {
             if (file == null || file.Length == 0)
             {
@@ -42,7 +49,8 @@ namespace backend.Controllers
             {
                 FileName = file.FileName,
                 ContentType = file.ContentType,
-                Size = file.Length
+                Size = file.Length,
+                TypeID = typeId
             };
 
             var createdMetadata = await _sheetMetadataService.CreateFileAsync(metadata, file);
@@ -64,9 +72,9 @@ namespace backend.Controllers
 
             return File(fileStream, metadata.ContentType, metadata.FileName);
         }
-
-        [HttpPost("ReadExcel/{id:length(24)}")]
-        public async Task<IActionResult> ReadExcel(string id)
+       
+        [HttpPost("ReadExcelData/{id:length(24)}")]
+        public async Task<IActionResult> ReadExcelData(string id)
         {
             var metadata = await _sheetMetadataService.GetAsync(id);
 
@@ -80,32 +88,7 @@ namespace backend.Controllers
             // Use ExcelService to read data from the Excel file
             try
             {
-                var data = await _excelService.ReadExcelAsync(fileStream);
-
-                return Ok(data);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error reading Excel file: {ex.Message}");
-            }
-        }
-
-        [HttpPost("ReadDataByCountries/{id:length(24)}")]
-        public async Task<IActionResult> ReadDataByCountries(string id)
-        {
-            var metadata = await _sheetMetadataService.GetAsync(id);
-
-            if (metadata == null)
-            {
-                return NotFound();
-            }
-
-            var fileStream = await _sheetMetadataService.GetFileAsync(metadata.FileId);
-
-            // Use ExcelService to read data from the Excel file
-            try
-            {
-                var (countries, years, datasets) = await _excelService.ReadDataExcelAsync(fileStream);
+                var (countries, years, datasets) = await _excelService.ReadTypedExcel(fileStream,metadata.ContentType);
 
                 var result = new
                 {

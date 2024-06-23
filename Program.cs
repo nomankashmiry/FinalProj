@@ -18,6 +18,7 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddControllers();
+services.AddSingleton<DocumentDeepSearchService>();
 services.AddSingleton<SheetMetadataService>();
 services.AddSingleton<ExcelService>();
 
