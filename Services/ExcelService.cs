@@ -159,6 +159,8 @@ namespace backend.Services
                 var rows = worksheet.Dimension?.Rows ?? 0;
                 var cols = worksheet.Dimension?.Columns ?? 0;
 
+                int incrementalValue = 1;
+
                 if (rows == 0 || cols == 0)
                 {
                     return (countries, years, datasets);
@@ -172,10 +174,11 @@ namespace backend.Services
                         countries.Add(country);
                     }
 
-                    for (int col = 2; col <= cols; col += 3)
+                    for (int col = 2; col <= cols; col += incrementalValue)
                     {
                         if (worksheet.Cells[1, col].Text.Contains("Scenario"))
                         {
+                            incrementalValue = 3;
                             var headerText =  worksheet.Cells[1, col].Text;
                             var year = headerText.Split(' ')[0];
                             if (!years.Contains(year))
