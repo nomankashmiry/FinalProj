@@ -23,6 +23,10 @@ namespace backend.Services
             {
                 (countries, years, datasets) = await ReadSegmentedData(fileStream);
             }
+            else if (TypeID.ToLower() == "capacityscenario")
+            {
+                (countries, years, datasets) = await ReadCapacityScenarioData(fileStream);
+            }
 
             return (countries, years, datasets);
         }
@@ -140,6 +144,91 @@ namespace backend.Services
                     }
             }
 
+            return (countries, years, datasets);
+        }
+
+        public async Task<(List<string> countries, List<string> years, List<Dictionary<string, object>> datasets)> ReadCapacityScenarioData(Stream fileStream)
+        {
+            var countries = new List<string>();
+            var years = new List<string>();
+            var datasets = new List<Dictionary<string, object>>();
+
+            using var package = new ExcelPackage(fileStream);
+            
+                var worksheet = package.Workbook.Worksheets[0]; // Assuming data is in the first sheet
+                var rows = worksheet.Dimension?.Rows ?? 0;
+                var cols = worksheet.Dimension?.Columns ?? 0;
+
+                if (rows == 0 || cols == 0)
+                {
+                    return (countries, years, datasets);
+                }
+
+                for (int row = 2; row <= rows; row++)
+                {
+                    var country = worksheet.Cells[row, 2].Text;
+                    if (!countries.Contains(country))
+                    {
+                        countries.Add(country);
+                    }
+
+                    for (int col = 2; col <= cols; col += 3)
+                    {
+                        if (worksheet.Cells[1, col].Text.Contains("Scenario"))
+                        {
+                            var headerText =  worksheet.Cells[1, col].Text;
+                            var year = headerText.Split(' ')[0];
+                            if (!years.Contains(year))
+                            {
+                                years.Add(year);
+                            }
+
+                            var low = worksheet.Cells[row, col]?.Text ?? "0";
+                            var medium = worksheet.Cells[row, col + 1]?.Text ?? "0";
+                            var high = worksheet.Cells[row, col + 2]?.Text ?? "0";
+
+                            var lowData = datasets.FirstOrDefault(d => d["country"].ToString() == country && d["label"].ToString() == "Low");
+                            var mediumData = datasets.FirstOrDefault(d => d["country"].ToString() == country && d["label"].ToString() == "Medium");
+                            var highData = datasets.FirstOrDefault(d => d["country"].ToString() == country && d["label"].ToString() == "High");
+
+                            if (lowData == null)
+                            {
+                                lowData = new Dictionary<string, object>
+                                {
+                                    { "country", country },
+                                    { "label", "Low" },
+                                    { "data", new List<string>() }
+                                };
+                                datasets.Add(lowData);
+                            }
+                            ((List<string>)lowData["data"]).Add(low);
+
+                            if (mediumData == null)
+                            {
+                                mediumData = new Dictionary<string, object>
+                                {
+                                    { "country", country },
+                                    { "label", "Medium" },
+                                    { "data", new List<string>() }
+                                };
+                                datasets.Add(mediumData);
+                            }
+                            ((List<string>)mediumData["data"]).Add(medium);
+
+                            if (highData == null)
+                            {
+                                highData = new Dictionary<string, object>
+                                {
+                                    { "country", country },
+                                    { "label", "High" },
+                                    { "data", new List<string>() }
+                                };
+                                datasets.Add(highData);
+                            }
+                            ((List<string>)highData["data"]).Add(high);
+                        }
+                    }
+            }
             return (countries, years, datasets);
         }
     }
